@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Security Testing - CodeShield{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <!-- Header -->
+    <div class="mb-4">
+      <h2 class="fw-bold text-white mb-1">
+        <i class="bi bi-bug-fill text-danger me-2"></i>Module 3: Security Testing
+      </h2>
+      <p class="text-secondary mb-0" style="font-size: 1.05rem;">Live interactive demonstrations proving cryptographic resilience against file tampering and unauthorized keys.</p>
+    </div>
+
+    <!-- Demonstration Action Buttons -->
+    <div class="shield-card p-4 mb-4">
+      <h5 class="fw-bold text-white mb-2">Live Attack Demonstrations</h5>
+      <p class="text-secondary mb-4" style="font-size: 1rem; line-height: 1.6;">
+        Click a demonstration button below to execute real-time cryptographic tests in the backend. These tests perform actual SHA-256 hashing and RSA-PSS verification on the fly.
+      </p>
+
+      <div class="d-flex flex-wrap gap-3">
+        <button id="btn-test-tampering" type="button" class="btn btn-shield-primary d-flex align-items-center">
+          <i class="bi bi-file-earmark-diff-fill me-2 fs-5"></i>
+          <span>Run Test 1: File Tampering</span>
+        </button>
+        <button id="btn-test-wrongkey" type="button" class="btn btn-shield-outline d-flex align-items-center">
+          <i class="bi bi-key-fill text-warning me-2 fs-5"></i>
+          <span>Run Test 2: Wrong Public Key</span>
+        </button>
+        <button id="btn-test-all" type="button" class="btn btn-shield-success d-flex align-items-center">
+          <i class="bi bi-play-circle-fill me-2 fs-5"></i>
+          <span>Run All Security Tests</span>
+        </button>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div id="security-test-loading" class="text-center py-4 d-none">
+        <div class="spinner-border text-info" role="status">
+          <span class="visually-hidden">Executing Cryptographic Proofs...</span>
+        </div>
+        <p class="text-info fw-semibold mt-2">Executing real cryptographic operations in Python...</p>
+      </div>
+    </div>
+
+    <!-- Results Container (Initially Hidden) -->
+    <div id="security-results-container" class="d-none">
+
+      <!-- Summary Table Card -->
+      <div class="shield-card p-4 mb-4">
+        <h5 class="fw-bold text-white mb-3 d-flex align-items-center">
+          <i class="bi bi-table text-info me-2 fs-5"></i>Security Demonstration Summary Table
+        </h5>
+        <div class="table-responsive">
+          <table class="table table-dark table-codeshield mb-0" style="background-color: #09101f !important; color: #ffffff !important;">
+            <thead>
+              <tr style="background-color: #111d38 !important;">
+                <th scope="col" class="fs-6 text-info ps-3 py-3" style="background-color: #111d38 !important; color: #38bdf8 !important;">Test Scenario</th>
+                <th scope="col" class="text-center fs-6 text-info pe-3 py-3" style="background-color: #111d38 !important; color: #38bdf8 !important; width: 220px;">Verification Result</th>
+              </tr>
+            </thead>
+            <tbody id="security-summary-body" style="background-color: #09101f !important;">
+              <tr style="background-color: #09101f !important;">
+                <td class="fw-bold py-3 ps-3" style="color: #ffffff !important; background-color: #09101f !important; font-size: 1.05rem;">
+                  <i class="bi bi-shield-check text-info me-2"></i>Original file with matching Public Key
+                </td>
+                <td class="text-center py-3 pe-3" style="background-color: #09101f !important;">
+                  <span class="badge bg-success px-3 py-2 fs-6 fw-bold shadow"><i class="bi bi-check-circle-fill me-1"></i>Valid</span>
+                </td>
+              </tr>
+              <tr style="background-color: #09101f !important;">
+                <td class="fw-bold py-3 ps-3" style="color: #ffffff !important; background-color: #09101f !important; font-size: 1.05rem;">
+                  <i class="bi bi-shield-x text-danger me-2"></i>Modified / Tampered file with original Signature
+                </td>
+                <td class="text-center py-3 pe-3" style="background-color: #09101f !important;">
+                  <span class="badge bg-danger px-3 py-2 fs-6 fw-bold shadow"><i class="bi bi-x-circle-fill me-1"></i>Invalid</span>
+                </td>
+              </tr>
+              <tr style="background-color: #09101f !important;">
+                <td class="fw-bold py-3 ps-3" style="color: #ffffff !important; background-color: #09101f !important; font-size: 1.05rem;">
+                  <i class="bi bi-key-fill text-warning me-2"></i>Original file with Wrong Public Key
+                </td>
+                <td class="text-center py-3 pe-3" style="background-color: #09101f !important;">
+                  <span class="badge bg-danger px-3 py-2 fs-6 fw-bold shadow"><i class="bi bi-x-circle-fill me-1"></i>Invalid</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Test 1 Detailed Breakdown (Tampering) -->
+      <div id="sec-tamper-details" class="shield-card p-4 mb-4 d-none">
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 border-bottom border-secondary border-opacity-50 pb-3 gap-2">
+          <div>
+            <h5 class="fw-bold text-white mb-0">
+              <i class="bi bi-file-earmark-diff text-danger me-2"></i>Test 1 Breakdown: Code Modification & Tampering
+            </h5>
+            <small class="text-secondary">Edit the code in the right box to test real tampering live!</small>
+          </div>
+          <span id="tamper-status-badge" class="badge bg-danger px-3 py-2 fs-6 fw-bold">Verification FAILED</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label text-success small fw-bold d-flex justify-content-between">
+              <span>1. Original Code (Signed)</span>
+              <span class="text-dim">Editable</span>
+            </label>
+            <textarea id="tamper-orig-code" class="form-control crypto-box text-success" rows="5" style="resize: vertical; font-size: 0.9rem; line-height: 1.4;"></textarea>
+            <label class="form-label text-white small fw-bold mt-2">Original SHA-256 Digest</label>
+            <div id="tamper-orig-hash" class="crypto-box text-info"></div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label text-danger small fw-bold d-flex justify-content-between">
+              <span>2. Modified / Tampered Code</span>
+              <span class="text-warning">Try typing or editing here!</span>
+            </label>
+            <textarea id="tamper-mod-code" class="form-control crypto-box text-warning" rows="5" style="resize: vertical; font-size: 0.9rem; line-height: 1.4;"></textarea>
+            <label class="form-label text-white small fw-bold mt-2">Modified SHA-256 Digest (Avalanche Effect)</label>
+            <div id="tamper-mod-hash" class="crypto-box text-warning"></div>
+          </div>
+
+          <!-- Run Custom Verification Button -->
+          <div class="col-12 text-end pt-2">
+            <button type="button" id="btn-verify-tamper-custom" class="btn btn-shield-primary px-4 py-2">
+              <i class="bi bi-shield-check me-2"></i>Verify Integrity of Modified Code
+            </button>
+          </div>
+        </div>
+
+        <!-- Mechanism Explanation Box -->
+        <div class="educational-alert mt-4">
+          <div class="d-flex align-items-start">
+            <i class="bi bi-shield-exclamation text-danger me-2 fs-4 mt-1"></i>
+            <div>
+              <strong class="text-white">Integrity Detection vs Malware Scanning:</strong>
+              <span id="tamper-explanation" class="text-white"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test 2 Detailed Breakdown (Wrong Key) -->
+      <div id="sec-wrongkey-details" class="shield-card p-4 mb-4 d-none">
+        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary border-opacity-50 pb-3">
+          <h5 class="fw-bold text-white mb-0">
+            <i class="bi bi-key text-warning me-2"></i>Test 2 Breakdown: Unauthorized / Wrong Public Key
+          </h5>
+          <span class="badge bg-danger px-3 py-2 fs-6">Verification FAILED</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label text-info small fw-bold">Signer Public Key A (Legitimate Developer)</label>
+            <div id="key-a-preview" class="crypto-box text-info"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-warning small fw-bold">Supplied Public Key B (Attacker / Different Key)</label>
+            <div id="key-b-preview" class="crypto-box text-warning"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label text-white small fw-bold">Target File SHA-256 Digest</label>
+            <div id="wrongkey-file-hash" class="crypto-box"></div>
+          </div>
+        </div>
+
+        <div class="educational-alert mt-4">
+          <div class="d-flex align-items-start">
+            <i class="bi bi-info-circle-fill text-info me-2 fs-4 mt-1"></i>
+            <div>
+              <strong class="text-white">Mathematical Non-Repudiation:</strong>
+              <span id="wrongkey-explanation" class="text-white"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

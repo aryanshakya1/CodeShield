@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Verify File - CodeShield{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <!-- Header -->
+    <div class="mb-4">
+      <h2 class="fw-bold text-white mb-1">
+        <i class="bi bi-shield-check text-info me-2"></i>Module 2: Signature Verification
+      </h2>
+      <p class="text-secondary mb-0" style="font-size: 1.05rem;">Validate file authenticity and detect unauthorized alterations using public key cryptography.</p>
+    </div>
+
+    <!-- Verification Form Card -->
+    <div class="shield-card mb-4">
+      <div class="shield-card-header">
+        <span class="fw-bold text-white">
+          <i class="bi bi-patch-check-fill text-primary me-2 fs-5"></i>Verify File Integrity & Authenticity
+        </span>
+      </div>
+      <div class="p-4">
+        <!-- Error alert -->
+        <div id="verify-error-alert" class="alert alert-danger d-none fw-semibold" role="alert"></div>
+
+        <form id="form-verify-file" enctype="multipart/form-data">
+          <div class="row g-4">
+
+            <!-- File Upload -->
+            <div class="col-md-12">
+              <label for="verify-file" class="form-label text-white fw-semibold">
+                1. Select File to Verify <span class="text-danger">*</span>
+              </label>
+              <input type="file" id="verify-file" name="file" class="form-control" required accept=".py,.txt,.exe,.zip,.json,.bin,.pdf">
+              <div class="text-dim mt-1">The candidate file whose integrity and authenticity you wish to verify.</div>
+            </div>
+
+            <!-- Signature File Upload -->
+            <div class="col-md-6">
+              <label for="verify-sig-file" class="form-label text-white fw-semibold">
+                2. Upload Digital Signature (.sig) <span class="text-danger">*</span>
+              </label>
+              <input type="file" id="verify-sig-file" name="signature" class="form-control" accept=".sig,.bin,.txt">
+              <div class="text-dim mt-1">The cryptographic signature file corresponding to this file.</div>
+            </div>
+
+            <!-- Public Key Upload -->
+            <div class="col-md-6">
+              <label for="verify-pubkey-file" class="form-label text-white fw-semibold">
+                3. Upload Public Key (.pem) <span class="text-danger">*</span>
+              </label>
+              <input type="file" id="verify-pubkey-file" name="public_key" class="form-control" accept=".pem,.pub,.key">
+              <div class="text-dim mt-1">The signer's public key (e.g. public_key.pem).</div>
+            </div>
+
+            <!-- Optional: Paste Public Key Text Directly -->
+            <div class="col-md-12">
+              <div class="accordion" id="accordionPubKey">
+                <div class="accordion-item bg-transparent border-secondary border-opacity-50">
+                  <h2 class="accordion-header" id="headingPub">
+                    <button class="accordion-button collapsed bg-transparent text-info py-2 fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePub">
+                      <i class="bi bi-pencil-square me-2"></i> Or Paste Public Key PEM Directly
+                    </button>
+                  </h2>
+                  <div id="collapsePub" class="accordion-collapse collapse" data-bs-parent="#accordionPubKey">
+                    <div class="accordion-body px-0 pt-2">
+                      <textarea id="verify-pubkey-text" name="public_key_text" class="form-control crypto-box" rows="4" placeholder="-----BEGIN PUBLIC KEY----- ..."></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="col-12 text-end pt-2">
+              <button id="btn-verify-submit" type="submit" class="btn btn-shield-primary px-4 py-2">
+                <i class="bi bi-shield-check me-2"></i>Verify Signature
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Verification Result Card (Initially Hidden) -->
+    <div id="verify-result-card" class="shield-card p-4 mb-4 d-none">
+      
+      <!-- Status Banner -->
+      <div id="verify-status-banner" class="mb-4">
+        <div class="d-flex align-items-center">
+          <i id="verify-status-icon" class="display-4 me-3"></i>
+          <div>
+            <h4 id="verify-status-title" class="fw-bold mb-1"></h4>
+            <p id="verify-explanation" class="mb-0 text-white" style="font-size: 1.05rem; line-height: 1.6;"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Details -->
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label text-secondary small fw-bold">Target File</label>
+          <div class="fw-bold text-white fs-6" id="verify-filename">-</div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label text-secondary small fw-bold">Verification Latency</label>
+          <div class="fw-bold text-info fs-5" id="verify-time">-</div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label text-white small fw-bold">Computed SHA-256 Digest of Uploaded File</label>
+          <div id="verify-hash" class="crypto-box"></div>
+        </div>
+      </div>
+
+      <!-- Educational Trust Model Notice -->
+      <div class="educational-alert mt-4">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle-fill text-warning me-2 fs-5 mt-1"></i>
+          <div>
+            <strong class="text-white">Trust Model Note:</strong> 
+            <span>A valid signature only confirms integrity relative to the supplied public key. For a trustworthy result, the user must have obtained the public key from a trusted source (e.g. developer's official website, Certificate Authority, or secure repository).</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

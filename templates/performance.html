@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Performance Analysis - CodeShield{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <!-- Header -->
+    <div class="mb-4">
+      <h2 class="fw-bold text-white mb-1">
+        <i class="bi bi-speedometer2 text-info me-2"></i>Module 4: Performance Analysis
+      </h2>
+      <p class="text-secondary mb-0" style="font-size: 1.05rem;">Empirical benchmarking of cryptographic latency and application startup verification overhead.</p>
+    </div>
+
+    <!-- Benchmark Trigger Card -->
+    <div class="shield-card p-4 mb-4">
+      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div>
+          <h5 class="fw-bold text-white mb-1">Live Cryptographic Latency Benchmark</h5>
+          <p class="text-secondary mb-0" style="font-size: 1rem; line-height: 1.6;">
+            Measures real hardware execution times using Python's high-resolution timer (<span class="badge-code">time.perf_counter()</span>).
+          </p>
+        </div>
+        <button id="btn-run-benchmark" type="button" class="btn btn-shield-primary px-4 py-2 text-nowrap">
+          <i class="bi bi-play-fill me-1 fs-5"></i>Run Performance Benchmark
+        </button>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div id="benchmark-loading" class="text-center py-4 d-none">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Measuring cryptographic operations...</span>
+        </div>
+        <p class="text-info fw-semibold mt-2">Executing benchmark iterations and measuring startup overhead...</p>
+      </div>
+    </div>
+
+    <!-- Results Section (Initially Hidden) -->
+    <div id="benchmark-results" class="d-none">
+
+      <!-- Metric Cards Grid -->
+      <div class="row g-3 mb-4">
+        <!-- Key Gen -->
+        <div class="col-6 col-md-3">
+          <div class="metric-card">
+            <div class="metric-label">RSA 2048 Key Gen</div>
+            <div class="metric-number text-warning" id="metric-keygen">-</div>
+            <div class="text-dim mt-1">Key pair generation</div>
+          </div>
+        </div>
+
+        <!-- SHA-256 Hash -->
+        <div class="col-6 col-md-3">
+          <div class="metric-card">
+            <div class="metric-label">SHA-256 Hashing</div>
+            <div class="metric-number text-info" id="metric-hash">-</div>
+            <div class="text-dim mt-1">~256 KB memory buffer</div>
+          </div>
+        </div>
+
+        <!-- Signing -->
+        <div class="col-6 col-md-3">
+          <div class="metric-card">
+            <div class="metric-label">RSA-PSS Signing</div>
+            <div class="metric-number text-primary" id="metric-sign">-</div>
+            <div class="text-dim mt-1">Private key encryption</div>
+          </div>
+        </div>
+
+        <!-- Verification -->
+        <div class="col-6 col-md-3">
+          <div class="metric-card">
+            <div class="metric-label">RSA-PSS Verification</div>
+            <div class="metric-number text-success" id="metric-verify">-</div>
+            <div class="text-dim mt-1">Public key proof</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Matplotlib Chart & Explanation -->
+      <div class="shield-card p-4 mb-4">
+        <h5 class="fw-bold text-white mb-3">
+          <i class="bi bi-bar-chart-fill text-info me-2"></i>Latency Comparison (Matplotlib Generated)
+        </h5>
+        <div class="text-center mb-4">
+          <img id="performance-chart-img" class="img-fluid rounded-3 border border-secondary border-opacity-50 shadow-sm" alt="Performance Benchmark Chart">
+        </div>
+        <p class="text-white mb-0" style="font-size: 1rem; line-height: 1.65;">
+          <strong class="text-info">Cryptographic Observation:</strong> SHA-256 is an ultra-fast symmetric hashing algorithm, whereas RSA private-key signing is significantly more compute-intensive due to large modular exponentiation with the private exponent <span class="badge-code">d</span>. RSA public key verification is typically faster than signing because public exponent <span class="badge-code">e = 65537</span> has very few 1-bits (Hamming weight of 2).
+        </p>
+      </div>
+
+      <!-- Application Startup Overhead Analysis -->
+      <div class="shield-card p-4 mb-4">
+        <h5 class="fw-bold text-white mb-2">
+          <i class="bi bi-cpu-fill text-primary me-2"></i>Application Startup Verification Overhead
+        </h5>
+        <p class="text-secondary mb-4" style="font-size: 1rem; line-height: 1.6;">
+          Measures the real-world overhead of enforcing signature verification prior to program launch using the predefined safe program (<span class="badge-code">sample/demo.py</span>).
+        </p>
+
+        <div class="row g-3 text-center mb-4">
+          <div class="col-md-4">
+            <div class="p-3 rounded-3" style="background-color: #0c162c; border: 1px solid var(--border-color);">
+              <div class="text-secondary small text-uppercase fw-bold">Avg. Normal Startup</div>
+              <div class="fs-2 fw-bold text-white mt-1" id="metric-normal-startup">-</div>
+              <div class="text-dim mt-1">Direct execution (5 runs)</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 rounded-3" style="background-color: #0c162c; border: 1px solid var(--border-color);">
+              <div class="text-secondary small text-uppercase fw-bold">Avg. Verified Startup</div>
+              <div class="fs-2 fw-bold text-info mt-1" id="metric-verified-startup">-</div>
+              <div class="text-dim mt-1">Hash + Verify + Launch (5 runs)</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 rounded-3" style="background-color: #162444; border: 1px solid #38bdf8;">
+              <div class="text-info small text-uppercase fw-bold">Additional Overhead</div>
+              <div class="fs-2 fw-bold text-warning mt-1" id="metric-overhead-ms">-</div>
+              <div class="text-dim mt-1">Pre-launch security cost</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strict Security Callout -->
+        <div class="educational-alert">
+          <div class="d-flex align-items-start">
+            <i class="bi bi-shield-lock-fill text-info me-2 fs-4 mt-1"></i>
+            <div>
+              <strong class="text-white">Security Boundary Enforcement:</strong> 
+              <span>CodeShield never executes user-uploaded programs or arbitrary binaries. The startup benchmark strictly executes only the predefined, harmless demonstration program (<span class="badge-code">sample/demo.py</span>) and only after successful cryptographic signature verification.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

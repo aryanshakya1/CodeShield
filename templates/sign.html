@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Sign File - CodeShield{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h2 class="fw-bold text-white mb-1">
+          <i class="bi bi-pen-fill text-info me-2"></i>Module 1: Digital Signature Generation
+        </h2>
+        <p class="text-secondary mb-0" style="font-size: 1.05rem;">Generate RSA 2048-bit keys and cryptographically sign code/software packages.</p>
+      </div>
+      <a href="{{ url_for('download_demo_sample') }}" class="btn btn-sm btn-shield-outline d-none d-md-inline-flex align-items-center">
+        <i class="bi bi-download me-1"></i> Download Sample Script (demo.py)
+      </a>
+    </div>
+
+    <!-- Step 1: Generate RSA Keys -->
+    <div class="shield-card mb-4">
+      <div class="shield-card-header d-flex align-items-center justify-content-between">
+        <span class="fw-bold text-white">
+          <i class="bi bi-key-fill text-warning me-2 fs-5"></i>Step 1: Generate RSA 2048-bit Key Pair
+        </span>
+        <span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-50 px-3 py-2">RSA-PSS / PKCS#8</span>
+      </div>
+      <div class="p-4">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-7">
+            <label for="key-password" class="form-label text-white fw-semibold">
+              Private Key Password (Optional, Recommended)
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" id="key-password" class="form-control" placeholder="Enter password to encrypt private key">
+            </div>
+            <div class="text-dim mt-1">Encrypts the private key with AES-256 (PKCS#8). Leave empty for unencrypted key.</div>
+          </div>
+          <div class="col-md-5 text-md-end">
+            <button id="btn-generate-keys" type="button" class="btn btn-shield-primary w-100 py-2">
+              <i class="bi bi-key-fill me-2"></i>Generate RSA Keys
+            </button>
+          </div>
+        </div>
+
+        <!-- Generated Keys Display Area (Initially Hidden) -->
+        <div id="keygen-results" class="mt-4 pt-3 border-top border-secondary border-opacity-50 d-none">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="text-success fw-bold fs-6">
+              <i class="bi bi-check-circle-fill me-1"></i> Keys Generated Successfully in <span id="keygen-time" class="text-white">0 ms</span>
+            </span>
+            <div class="d-flex gap-2">
+              <button id="btn-dl-priv" type="button" class="btn btn-sm btn-outline-warning text-white fw-semibold">
+                <i class="bi bi-download me-1 text-warning"></i> Download private_key.pem
+              </button>
+              <button id="btn-dl-pub" type="button" class="btn btn-sm btn-outline-info text-white fw-semibold">
+                <i class="bi bi-download me-1 text-info"></i> Download public_key.pem
+              </button>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label text-warning small fw-bold">Private Key (Confidential — Keep Secret)</label>
+              <textarea id="priv-key-display" class="form-control crypto-box" rows="5" readonly></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-info small fw-bold">Public Key (Sharable — Give to Users)</label>
+              <textarea id="pub-key-display" class="form-control crypto-box" rows="5" readonly></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Sign File -->
+    <div class="shield-card mb-4">
+      <div class="shield-card-header">
+        <span class="fw-bold text-white">
+          <i class="bi bi-file-earmark-lock2-fill text-info me-2 fs-5"></i>Step 2: Sign a File (.py, .txt, .exe, .zip)
+        </span>
+      </div>
+      <div class="p-4">
+        <!-- Error alert -->
+        <div id="sign-error-alert" class="alert alert-danger d-none fw-semibold" role="alert"></div>
+
+        <form id="form-sign-file" enctype="multipart/form-data">
+          <div class="row g-3">
+
+            <!-- Target File -->
+            <div class="col-md-12">
+              <label for="target-file" class="form-label text-white fw-semibold">
+                1. Select File to Sign <span class="text-danger">*</span>
+              </label>
+              <input type="file" id="target-file" name="file" class="form-control" required accept=".py,.txt,.exe,.zip,.json,.bin,.pdf">
+              <div class="text-dim mt-1">Supports .py, .txt, .exe, .zip and other binary or source files (Max 32MB).</div>
+            </div>
+
+            <!-- Private Key Upload or Auto-filled Text -->
+            <div class="col-md-6">
+              <label for="sign-privkey-file" class="form-label text-white fw-semibold">
+                2. Upload Private Key File (.pem)
+              </label>
+              <input type="file" id="sign-privkey-file" name="private_key" class="form-control" accept=".pem,.key">
+              <div class="text-dim mt-1">Or use the private key generated above (auto-filled below).</div>
+            </div>
+
+            <!-- Private Key Password -->
+            <div class="col-md-6">
+              <label for="sign-password" class="form-label text-white fw-semibold">
+                3. Private Key Password
+              </label>
+              <input type="password" id="sign-password" name="password" class="form-control" placeholder="Required if key was encrypted">
+              <div class="text-dim mt-1">Leave blank if the private key was unencrypted.</div>
+            </div>
+
+            <!-- Optional Direct Private Key Text Area -->
+            <div class="col-md-12">
+              <div class="accordion" id="accordionPrivKeyText">
+                <div class="accordion-item bg-transparent border-secondary border-opacity-50">
+                  <h2 class="accordion-header" id="headingPriv">
+                    <button class="accordion-button collapsed bg-transparent text-info py-2 fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePriv">
+                      <i class="bi bi-pencil-square me-2"></i> Or Paste Private Key PEM Content
+                    </button>
+                  </h2>
+                  <div id="collapsePriv" class="accordion-collapse collapse" data-bs-parent="#accordionPrivKeyText">
+                    <div class="accordion-body px-0 pt-2">
+                      <textarea id="sign-privkey-text" name="private_key_text" class="form-control crypto-box" rows="4" placeholder="-----BEGIN PRIVATE KEY----- ..."></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="col-12 text-end pt-2">
+              <button id="btn-sign-submit" type="submit" class="btn btn-shield-primary px-4 py-2">
+                <i class="bi bi-pen-fill me-2"></i>Sign File
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Signing Results Area (Initially Hidden) -->
+    <div id="sign-results" class="shield-card p-4 mb-4 d-none">
+      <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary border-opacity-50 pb-3">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-check-circle-fill text-success fs-2 me-3"></i>
+          <div>
+            <h5 class="fw-bold text-white mb-0">Signature Generated Successfully</h5>
+            <div class="text-secondary small">File has been cryptographically signed with RSA-PSS SHA-256</div>
+          </div>
+        </div>
+        <button id="btn-download-sig" type="button" class="btn btn-shield-success">
+          <i class="bi bi-download me-2"></i>Download .sig File
+        </button>
+      </div>
+
+      <div class="row g-3">
+        <!-- File Name & Size -->
+        <div class="col-md-4">
+          <label class="form-label text-secondary small fw-bold">Signed File</label>
+          <div class="fw-semibold text-white fs-6" id="res-sign-filename">-</div>
+          <div class="text-dim" id="res-sign-filesize">-</div>
+        </div>
+
+        <!-- Hashing Time -->
+        <div class="col-md-4">
+          <label class="form-label text-secondary small fw-bold">SHA-256 Hashing Latency</label>
+          <div class="fw-bold text-info fs-5" id="res-hash-time">-</div>
+          <div class="text-dim">Streaming chunk digest</div>
+        </div>
+
+        <!-- Signing Time -->
+        <div class="col-md-4">
+          <label class="form-label text-secondary small fw-bold">RSA-PSS Signing Latency</label>
+          <div class="fw-bold text-warning fs-5" id="res-sign-time">-</div>
+          <div class="text-dim">Prehashed digest encryption</div>
+        </div>
+
+        <!-- File SHA-256 Hash -->
+        <div class="col-12">
+          <label class="form-label text-white small fw-bold">Calculated SHA-256 Digest</label>
+          <div id="res-sign-hash" class="crypto-box"></div>
+        </div>
+
+        <!-- Signature Hex Preview -->
+        <div class="col-12">
+          <label class="form-label text-white small fw-bold">Digital Signature (256 bytes RSA-PSS Hex Output)</label>
+          <div id="res-sign-sigpreview" class="crypto-box" style="max-height: 90px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security & Privacy Guarantee Notice -->
+    <div class="educational-alert">
+      <div class="d-flex align-items-start">
+        <i class="bi bi-shield-lock-fill text-info me-2 fs-5 mt-1"></i>
+        <div>
+          <strong class="text-white">Zero Server Storage Guarantee:</strong>
+          <span>Private keys and passwords are processed strictly in volatile memory during the signing operation and are immediately garbage-collected. No cryptographic secrets are ever saved to disk or persistent databases.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

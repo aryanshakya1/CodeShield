@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Home - CodeShield Secure Code Integrity Verification{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-lg-10 text-center">
+
+    <!-- Hero Title & Subtitle -->
+    <div class="mb-4">
+      <div class="d-inline-flex align-items-center justify-content-center p-3 mb-3 rounded-circle bg-primary bg-opacity-10 text-info border border-info border-opacity-25 shadow-sm">
+        <i class="bi bi-shield-lock-fill display-4"></i>
+      </div>
+      <h1 class="display-4 fw-bold text-white mb-2">CodeShield</h1>
+      <h4 class="text-info fw-semibold mb-3">Secure Code Integrity Verification Using Digital Signatures</h4>
+      <p class="lead text-white mx-auto" style="max-width: 760px; font-size: 1.2rem;">
+        Protecting software integrity through cryptographic digital signatures.
+      </p>
+    </div>
+
+    <!-- Main Call-to-Action Buttons -->
+    <div class="d-flex flex-wrap justify-content-center gap-3 mb-5">
+      <a href="{{ url_for('sign_page') }}" class="btn btn-shield-primary btn-lg px-4 py-3 d-flex align-items-center">
+        <i class="bi bi-pen-fill fs-5 me-2"></i>
+        <span>Sign a File</span>
+      </a>
+      <a href="{{ url_for('verify_page') }}" class="btn btn-shield-outline btn-lg px-4 py-3 d-flex align-items-center">
+        <i class="bi bi-shield-check fs-5 me-2"></i>
+        <span>Verify a File</span>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- How Digital Signatures Work Section -->
+<div class="row g-4 justify-content-center mb-5">
+  <div class="col-lg-10">
+    <div class="shield-card p-4">
+      <h4 class="fw-bold text-white mb-3 d-flex align-items-center">
+        <i class="bi bi-info-circle-fill text-info me-2 fs-4"></i>
+        How Digital Signatures Protect Software Integrity
+      </h4>
+      
+      <p class="text-white mb-4" style="font-size: 1.05rem; line-height: 1.7;">
+        A <strong class="text-info">digital signature</strong> is a cryptographic mechanism that guarantees the <strong class="text-white">authenticity</strong> and <strong class="text-white">integrity</strong> of a file or code distribution. It ensures that the software originated from a legitimate source and has not been altered or tampered with in transit.
+      </p>
+
+      <div class="row g-4 mt-1">
+        <!-- Step 1: Signing -->
+        <div class="col-md-6">
+          <div class="info-panel-blue h-100">
+            <h5 class="text-info fw-bold mb-3 d-flex align-items-center">
+              <span class="badge bg-primary me-2 px-2 py-1 fs-6">1</span> Signing Process
+            </h5>
+            <ol class="mb-0 ps-3" style="color: #f1f5f9; font-size: 0.98rem; line-height: 1.75;">
+              <li class="mb-3">
+                <strong class="text-white">Compute Digest:</strong> A cryptographic hash (<span class="badge-code">SHA-256</span>) of the file is generated, producing a unique 256-bit fingerprint.
+              </li>
+              <li class="mb-3">
+                <strong class="text-white">Encrypt Hash:</strong> The developer signs this hash using their confidential <strong class="text-white">RSA Private Key</strong> with <span class="badge-code">RSA-PSS</span> padding.
+              </li>
+              <li>
+                <strong class="text-white">Export Signature:</strong> The resulting signature is distributed as a <span class="badge-code">.sig</span> file alongside the software.
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Step 2: Verification -->
+        <div class="col-md-6">
+          <div class="info-panel-green h-100">
+            <h5 class="text-success fw-bold mb-3 d-flex align-items-center">
+              <span class="badge bg-success me-2 px-2 py-1 fs-6">2</span> Verification Process
+            </h5>
+            <ol class="mb-0 ps-3" style="color: #f1f5f9; font-size: 0.98rem; line-height: 1.75;">
+              <li class="mb-3">
+                <strong class="text-white">Compute Current Digest:</strong> The user recalculates the <span class="badge-code">SHA-256</span> hash of the received file.
+              </li>
+              <li class="mb-3">
+                <strong class="text-white">Verify with Public Key:</strong> The signature is mathematically verified using the developer's trusted <strong class="text-white">RSA Public Key</strong>.
+              </li>
+              <li>
+                <strong class="text-white">Strict Validation:</strong> If even 1 single bit changed, the cryptographic proof fails immediately.
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- Viva Quick Note -->
+      <div class="educational-alert mt-4">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-lightbulb-fill text-warning me-2 fs-5 mt-1"></i>
+          <div>
+            <strong class="text-white">Key Lab Concept:</strong> 
+            <span>Digital signatures provide <em class="text-info">Non-Repudiation</em> (the signer cannot deny creating it) and <em class="text-success">Integrity</em> (any unauthorized tampering invalidates the signature mathematically).</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Module Overview Cards -->
+<div class="row g-4 justify-content-center">
+  <div class="col-md-5 col-lg-5">
+    <div class="shield-card h-100 p-4">
+      <div class="d-flex align-items-center mb-3">
+        <i class="bi bi-bug-fill text-danger fs-3 me-3"></i>
+        <h5 class="fw-bold text-white mb-0">Module 3: Security Testing</h5>
+      </div>
+      <p class="mb-4" style="color: #cbd5e1; font-size: 1rem; line-height: 1.6;">
+        Demonstrate unauthorized code tampering and mismatched public keys in action with real cryptographic checks.
+      </p>
+      <a href="{{ url_for('security_page') }}" class="btn btn-sm btn-shield-outline">
+        Run Security Tests <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="col-md-5 col-lg-5">
+    <div class="shield-card h-100 p-4">
+      <div class="d-flex align-items-center mb-3">
+        <i class="bi bi-graph-up text-primary fs-3 me-3"></i>
+        <h5 class="fw-bold text-white mb-0">Module 4: Performance Analysis</h5>
+      </div>
+      <p class="mb-4" style="color: #cbd5e1; font-size: 1rem; line-height: 1.6;">
+        Benchmark hashing, signing, and verification latency, plus real application startup verification overhead.
+      </p>
+      <a href="{{ url_for('performance_page') }}" class="btn btn-sm btn-shield-outline">
+        View Performance <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
