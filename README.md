@@ -1,58 +1,66 @@
-# CodeShield — Secure Code Integrity Verification using Digital Signatures
+# CodeShield: Secure Code Integrity Verification System
 
-> **Applied Cryptography Lab Project**  
-> A simple, clean, and interactive web application demonstrating software integrity verification and non-repudiation through public-key digital signatures.
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Flask](https://img.shields.io/badge/framework-Flask-lightgrey.svg)](https://flask.palletsprojects.com/)
+[![Cryptography](https://img.shields.io/badge/security-cryptography%20(OpenSSL)-success.svg)](https://cryptography.io/)
+[![Tests](https://img.shields.io/badge/tests-11%20passed-brightgreen.svg)](tests/test_crypto.py)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
----
-
-## 1. Project Objective
-
-In modern software deployment, malicious actors can intercept executables, scripts, or package distributions to inject malicious payload (supply-chain attacks).
-
-**CodeShield** demonstrates how cryptographic digital signatures provide:
-
-1. **Integrity:** Assuring that code has not been modified or corrupted since it was signed.
-2. **Authenticity & Non-Repudiation:** Assuring that the code was created by the holder of the specific private key.
-3. **Detection of Unauthorized Changes:** Detecting even a single bit or whitespace alteration via the SHA-256 Avalanche Effect.
+> A modern, lightweight cryptographic web application demonstrating software integrity validation, digital signature generation, and tamper detection using **RSA-2048 (RSA-PSS with MGF1/SHA-256)** and **SHA-256 streaming hashing**.
 
 ---
 
-## 2. Tools & Technology Stack
+## 1. Overview & Objectives
 
-| Component         | Technology                   | Description                                          |
-| :---------------- | :--------------------------- | :--------------------------------------------------- |
-| **Backend**       | Python 3                     | Core language                                        |
-| **Web Framework** | Flask                        | Lightweight, unbloated micro-framework               |
-| **Cryptography**  | `cryptography` library       | OpenSSL-backed RSA-2048, RSA-PSS (MGF1 with SHA-256) |
-| **Hashing**       | `hashlib`                    | SHA-256 streaming digest calculation                 |
-| **Visualization** | `matplotlib`                 | High-resolution latency bar chart generation         |
-| **Frontend**      | HTML5, Bootstrap 5, CSS3, JS | Clean dark-navy responsive design                    |
+In modern software deployment and CI/CD pipelines, malicious actors can intercept executables, scripts, or package distributions to inject unauthorized payloads (supply-chain attacks).
 
-> **Design Choice:** Zero databases, zero heavy frontend frameworks, zero cloud dependencies. Runs 100% locally on your laptop.
+**CodeShield** provides a transparent, zero-database demonstration of how public-key cryptography safeguards code distribution:
+
+1. **Integrity:** Verifying that software bytes have not been modified, corrupted, or injected in transit.
+2. **Authenticity & Non-Repudiation:** Mathematically proving that code originated from the legitimate private key holder.
+3. **Tamper Detection:** Demonstrating the **SHA-256 Avalanche Effect**, where even a single altered byte or whitespace causes immediate signature verification failure.
+
+---
+
+## 2. Technology Stack
+
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Backend** | Python 3 (Flask) | Lightweight, unbloated micro-framework |
+| **Cryptography** | `cryptography` library | OpenSSL-backed RSA-2048 key generation & RSA-PSS signing |
+| **Hashing** | `hashlib` | SHA-256 streaming chunk digest calculation |
+| **Visualization** | `matplotlib` | High-contrast hardware latency comparison charts |
+| **Frontend** | HTML5, Bootstrap 5, CSS3, JS | Responsive dark-navy UI with high-contrast elements |
+
+> **Architectural Principle:** Zero external database dependencies, zero tracking, zero cloud services. All cryptographic operations execute 100% locally in memory.
 
 ---
 
 ## 3. Cryptographic Foundation
 
-### How SHA-256 Works
+```
+[ Developer ]
+   File --------> SHA-256 Digest --------> RSA-PSS Signing --------> .sig Signature
+                                                  ▲
+                                         [ RSA Private Key ]
 
-- SHA-256 (Secure Hash Algorithm 256-bit) is a cryptographic hash function that takes an arbitrary-length stream of bytes and transforms it into a fixed **256-bit (32-byte)** output hash.
-- **Pre-image Resistance:** Computationally infeasible to reverse the hash back into original data.
-- **Avalanche Effect:** Altering even a single character in the input causes an unpredictable, dramatic change across more than 50% of the output bits.
-- **Streaming Implementation:** In CodeShield, files are processed in 64 KB memory chunks (`calculate_sha256_stream`), allowing large files to be hashed without memory bloat.
+[ Verifier ]
+   File --------> SHA-256 Digest ──────┐
+                                       ▼
+   .sig Signature ────────────────> RSA-PSS Verification ────> VALID (Untampered)
+                                       ▲                       INVALID (Modified / Wrong Key)
+                               [ RSA Public Key ]
+```
 
-### How RSA Digital Signatures Work
+### SHA-256 Hashing
+- Computes a fixed **256-bit (32-byte)** cryptographic fingerprint of the input file.
+- **Streaming Implementation:** Read in 64 KB memory chunks (`calculate_sha256_stream`) to efficiently support large files without memory exhaustion.
+- **Avalanche Effect:** A 1-bit difference in source code produces a completely uncorrelated hash output.
 
-- **Key Generation:** Generates an asymmetric RSA 2048-bit key pair:
-  - **Private Key ($d$):** Kept strictly secret by the developer. Serialized with AES-256 password encryption (`PKCS#8`).
-  - **Public Key ($e, n$):** Distributed publicly (`SubjectPublicKeyInfo`).
-- **Signing Scheme (RSA-PSS):**
-  $$\text{Digest} = \text{SHA-256}(\text{File})$$
-  $$\text{Signature} = \text{Sign}_{K_{\text{private}}}(\text{Digest}, \text{Padding}=\text{PSS})$$
-  Uses Probabilistic Signature Scheme (PSS) with MGF1 (Mask Generation Function 1) and SHA-256, providing provable security superior to legacy PKCS#1 v1.5.
-- **Verification Scheme:**
-  $$\text{Result} = \text{Verify}_{K_{\text{public}}}(\text{File Digest}, \text{Signature})$$
-  If valid, returns **Valid**; if any byte was tampered or the key does not match, returns **Invalid**.
+### RSA-PSS Digital Signatures
+- **Key Pair:** Generates an asymmetric RSA 2048-bit key pair (Private Key $d$, Public Key $e = 65537, n$).
+- **Key Encryption:** Private keys can be password-protected using AES-256 (`PKCS#8` with `BestAvailableEncryption`).
+- **Probabilistic Signature Scheme (PSS):** Implements modern RSA-PSS padding with MGF1 and SHA-256 salt (`utils.Prehashed(hashes.SHA256())`), providing provable cryptographic security superior to legacy PKCS#1 v1.5.
 
 ---
 
@@ -60,20 +68,21 @@ In modern software deployment, malicious actors can intercept executables, scrip
 
 ```text
 CodeShield/
-├── app.py                  # Flask web server and API routes
-├── crypto_utils.py         # Real cryptographic operations (RSA-PSS, SHA-256)
-├── requirements.txt        # Minimal Python dependencies
-├── README.md               # Complete lab documentation
+├── app.py                  # Flask application server and REST endpoints
+├── crypto_utils.py         # Core cryptographic functions (RSA-PSS, SHA-256)
+├── requirements.txt        # Production dependencies
+├── .gitignore              # Git ignore rules for Python, caches & OS files
+├── README.md               # Project documentation
 ├── templates/              # Jinja2 HTML templates
-│   ├── base.html           # Dark navy layout, navigation bar, footer
-│   ├── index.html          # Home landing page with concept explanation
+│   ├── base.html           # Layout, navigation bar, and dark navy theme
+│   ├── index.html          # Home landing page and architecture overview
 │   ├── sign.html           # Module 1: RSA Key Generation & File Signing
 │   ├── verify.html         # Module 2: File Verification & Integrity Checks
-│   ├── security.html       # Module 3: Security & Tampering Demonstrations
+│   ├── security.html       # Module 3: Interactive Code Tampering & Attack Tests
 │   └── performance.html    # Module 4: Latency & Startup Overhead Benchmark
 ├── static/
-│   ├── style.css           # Custom dark theme, cards, and banners
-│   └── script.js           # Client-side handlers and AJAX requests
+│   ├── style.css           # High-contrast CSS theme and responsive rules
+│   └── script.js           # Client-side form handlers and dynamic interactions
 ├── sample/
 │   └── demo.py             # Predefined, safe demonstration script
 └── tests/
@@ -82,105 +91,112 @@ CodeShield/
 
 ---
 
-## 5. Installation & Running Locally
+## 5. Installation & Quick Start
 
-### Step 1: Open Terminal in the Project Directory
-
-```powershell
-cd d:\PROJECTS\Applied_Cryptography_PROJECT
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/CodeShield.git
+cd CodeShield
 ```
 
-### Step 2: Install Dependencies
+### 2. Set Up a Virtual Environment (Recommended)
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
 
-```powershell
+# macOS / Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-### Step 3: Launch the Application
-
-```powershell
+### 4. Run the Application
+```bash
 python app.py
 ```
 
-### Step 4: Open in Web Browser
-
-Navigate to:
-
+Open your browser and navigate to:
 ```
 http://127.0.0.1:5000
 ```
 
 ---
 
-## 6. How to Use & Demonstrate in Viva
+## 6. Module Walkthrough & Features
 
-### Step-by-Step Lab Demonstration
+### Module 1: Key Generation & File Signing (`/sign`)
+1. Click **"Generate RSA Keys"** (with optional private key password protection).
+2. Download the generated `private_key.pem` and `public_key.pem`.
+3. Select any target file (`.py`, `.txt`, `.exe`, `.zip`) or use the bundled sample script (`demo.py`).
+4. Select the private key, provide the password, and click **"Sign File"**.
+5. Inspect the file's SHA-256 digest, execution latency, and download the resulting `.sig` signature file.
 
-1. **Open CodeShield Home Page** (`http://127.0.0.1:5000`):
-   - Review the overview of how digital signatures ensure software authenticity and integrity.
-2. **Module 1: Sign File** (`/sign`):
-   - Click **"Generate RSA Keys"** (optionally provide a password).
-   - Download `private_key.pem` and `public_key.pem`.
-   - Select or upload a code file (e.g., click **"Download Sample Script (demo.py)"** in the top-right corner).
-   - Select the private key, enter the password, and click **"Sign File"**.
-   - Review the SHA-256 hash, signing latency, and click **"Download .sig File"**.
-3. **Module 2: Verify File** (`/verify`):
-   - Upload the original `demo.py`, `demo.py.sig`, and `public_key.pem`.
-   - Click **"Verify Signature"**.
-   - Observe the green success banner:
-     > **Signature Valid — File Integrity Verified**
-4. **Demonstrating Tampering**:
-   - Open `demo.py` in a text editor (e.g. Notepad) and add a harmless comment: `# modified line`.
-   - Save the file.
-   - Upload this modified file to `/verify` with the original `.sig` and original `public_key.pem`.
-   - Click **"Verify Signature"**.
-   - Observe the red failure banner:
-     > **Signature Invalid — File May Have Been Modified**
-5. **Module 3: Security Testing** (`/security`):
-   - Click **"Run Test 1: File Tampering"** to see live side-by-side SHA-256 hash comparison and integrity failure.
-   - Click **"Run Test 2: Wrong Public Key"** to see verification failure when an unrelated public key is provided.
-   - Review the comparison table:
-     | Test | Result |
-     | :--- | :--- |
-     | Original file with matching Public Key | **Valid** |
-     | Modified / Tampered file with original Signature | **Invalid** |
-     | Original file with Wrong Public Key | **Invalid** |
-6. **Module 4: Performance Analysis** (`/performance`):
-   - Click **"Run Performance Benchmark"**.
-   - View actual measured execution times:
-     - RSA-2048 Key Generation (ms)
-     - SHA-256 Hashing (ms)
-     - RSA-PSS Signing (ms)
-     - RSA-PSS Verification (ms)
-   - View the dynamically rendered **Matplotlib bar graph**.
-   - Inspect the **Application Startup Overhead** (average over 5 repeated runs of `demo.py`).
+### Module 2: Signature Verification (`/verify`)
+1. Upload the target file alongside its `.sig` signature and the signer's `public_key.pem`.
+2. Click **"Verify Signature"**.
+3. The system checks the file's SHA-256 hash against the decrypted signature:
+   - **Valid:** Displays a green confirmation banner (*"Signature Valid — File Integrity Verified"*).
+   - **Invalid:** Displays a red warning banner (*"Signature Invalid — File May Have Been Modified"*).
+
+### Module 3: Interactive Security Testing (`/security`)
+1. **Automated Security Summary Table:**
+   - Evaluates three baseline cryptographic scenarios:
+     | Scenario | Expected Result | Reason |
+     | :--- | :---: | :--- |
+     | **Original file with matching Public Key** | **Valid** | Hashes and mathematical proof match |
+     | **Modified file with original Signature** | **Invalid** | Tampered bytes alter the digest |
+     | **Original file with Wrong Public Key** | **Invalid** | Signature mathematically bound to original key |
+2. **Interactive Live Tampering Playground:**
+   - Edit the code directly in the **"Modified / Tampered Code"** box.
+   - Click **"Verify Integrity of Modified Code"** to watch the backend hash your custom edits and show real-time verification rejection.
+3. **Wrong Public Key Demonstration:**
+   - Proves non-repudiation by attempting verification of Alice's signed file using an attacker's public key.
+
+### Module 4: Performance Analysis (`/performance`)
+1. Measures real execution latency using Python's high-resolution timer (`time.perf_counter()`):
+   - RSA-2048 Key Generation (ms)
+   - SHA-256 Hashing (ms)
+   - RSA-PSS Signing (ms)
+   - RSA-PSS Verification (ms)
+2. Displays a dynamically rendered **Matplotlib bar graph**.
+3. **Startup Overhead Benchmark:** Runs a predefined safe program (`sample/demo.py`) 5 times directly vs. 5 times with pre-launch signature verification, calculating average additional overhead.
 
 ---
 
-## 7. Security Guarantees & Non-Claims
+## 7. Security Architecture & Guarantees
 
 - **Zero Arbitrary Execution:** User-uploaded files are **never** executed. Only the predefined safe script (`sample/demo.py`) is run during the startup benchmark, and only after successful cryptographic verification.
-- **No `shell=True`:** Subprocess invocations use strict argument lists (`[sys.executable, script_path]`).
-- **In-Memory Key Handling:** Private keys and passwords are processed in memory and immediately discarded. Never stored in a database or on the server file system.
-- **Integrity vs Antivirus:** CodeShield detects modifications because file bytes changed, not because it performs heuristics or antivirus scanning.
-- **Public Key Trust Model:** A valid signature proves integrity relative to the supplied public key. The verifier must acquire the public key through a trusted channel.
+- **Safe Subprocess Handling:** All subprocess invocations use strict argument lists with `shell=False`.
+- **In-Memory Credential Handling:** Private keys and passwords are processed strictly in volatile memory and immediately discarded. Never written to disk or logged.
+- **Integrity vs. Antivirus:** CodeShield detects tampering because file bytes changed, not because it performs heuristics or antivirus scanning.
+- **Public Key Trust Model:** A valid signature proves integrity relative to the supplied public key. The verifier must obtain the public key through a trusted channel.
 
 ---
 
 ## 8. Running Automated Tests
 
-To run the complete automated test suite (11 unit and integration tests):
+A comprehensive test suite of 11 unit and integration tests covers key generation, PKCS#8 decryption, stream hashing, PSS signing, tamper detection, and Flask endpoints:
 
-```powershell
+```bash
 python -m unittest tests/test_crypto.py
 ```
 
 Expected output:
-
 ```text
 ...........
 ----------------------------------------------------------------------
-Ran 11 tests in ~1.7s
+Ran 11 tests in ~1.5s
 
 OK
 ```
+
+---
+
+## 9. License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
