@@ -95,7 +95,7 @@ CodeShield/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/CodeShield.git
+git clone https://github.com/aryanshakya1/CodeShield.git
 cd CodeShield
 ```
 
